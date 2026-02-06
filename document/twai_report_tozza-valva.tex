@@ -37,6 +37,7 @@
 \usepackage{listings}
 \usepackage{makeidx}
 \usepackage{comment}
+\usepackage{animate}
 
 % --- Bibliografia ---
 \usepackage{biblatex}
@@ -65,7 +66,9 @@
     %{\large Project Proposal}\\[0.2truecm]
     %{\Large Informatica}\\
     \vfill
-    {\LARGE {\bf FourSight}}\\
+    {\Huge {\bf T.W.A.I.}}\\
+    \vspace{0.3cm}
+    {\Large \textit{(Tris Was Already Invented)}}\\
     
     \vfill\vfill
     
@@ -87,28 +90,38 @@
 \newpage
 
 \section{Introduzione}
-Il periodo festivo porta con sé panettoni, calze e gli immancabili parenti che si lamentano dell'Intelligenza Artificiale mentre guardano video di gattini che ballano sui social. Ma porta anche le tradizionali giocate a carte. È stato proprio durante l'ennesima partita persa a Sette e Mezzo che è sorta la domanda: "E se al nostro posto giocasse un'IA?".\\\\
+Il periodo festivo porta con sé tradizioni imprescindibili: i panettoni, le calze e le discussioni con i parenti che, pur lamentandosi dell'invadenza dell'Intelligenza Artificiale, passano il tempo a guardare video di gattini che ballano sui social. Ma porta anche le immancabili giocate a carte. 
+È stato proprio durante l'ennesima partita persa a \textit{Sette e Mezzo} che è sorta la domanda fatidica: ``E se al nostro posto giocasse un'IA?''.\\\\
 \noindent
-L'idea embrionale del progetto, inizialmente battezzata \textbf{(IA)'M FINE} (un gioco di parole sulla dichiarazione "sto bene" per non ricevere altre carte), mirava a creare un agente imbattibile a carte.\\\\
+L'idea embrionale del progetto, inizialmente battezzata con il nome in codice \textbf{(IA)'M FINE} (un gioco di parole sulla dichiarazione ``sto bene'' usata per non ricevere altre carte), mirava a creare un agente imbattibile in questo gioco tradizionale.\\\\
 \noindent
-Tuttavia, durante la fase di analisi preliminare, ci siamo resi conto di una criticità strutturale. A differenza di giochi come il Blackjack, dove il banco espone parzialmente il proprio stato (una carta scoperta e una coperta), nel Sette e Mezzo l'interazione inizia con un livello di informazione imperfetta molto più marcato (la carta iniziale è coperta e privata).\\\\
+Tuttavia, durante la fase di analisi preliminare, è emersa una criticità strutturale. A differenza di giochi come il Blackjack, dove il banco espone parzialmente il proprio stato (una carta scoperta e una coperta), nel Sette e Mezzo l'interazione inizia con un livello di informazione imperfetta molto marcato, dato che la carta iniziale è privata e coperta.
+Questa caratteristica sposta il problema dal ragionamento strategico puro alla gestione della probabilità e del rischio (stocasticità), rendendo difficile un confronto diretto tra l'efficacia di algoritmi deterministici come il Minimax.
+
+\subsubsection*{Cambio di Rotta}
+Cercando un'alternativa deterministica (a informazione perfetta), il pensiero è corso subito al gioco più classico: il Tris (Tic-Tac-Toe). Ma anche qui sorgeva un problema opposto: il Tris è un gioco banale, con uno spazio degli stati minuscolo e una strategia ottimale che porta inevitabilmente al pareggio.\\\
 \noindent
-Questa caratteristica sposta il problema dal ragionamento strategico puro alla gestione della probabilità e del rischio (stocasticità), rendendo difficile l'applicazione diretta e il confronto di algoritmi deterministici come il Minimax.\\\\
+Da qui nasce il nome definitivo del progetto: \textbf{T.W.A.I.} (\textit{Tris Was Already Invented}).\\\\
 \noindent
-Per questo motivo, abbiamo deciso di virare verso un dominio a Informazione Perfetta: \textbf{Forza 4} (Connect-4). 
-Nasce così \textbf{FourSight}. In questo contesto, l'intero stato del gioco è visibile a entrambi i contendenti, eliminando il fattore fortuna e permettendo di concentrare l'analisi esclusivamente sulle capacità computazionali e strategiche dell'Intelligenza Artificiale. \\\\
-\noindent
-Connect Four (noto anche come Connect 4, Four Up, Plot Four, Find Four, Captain's Mistress, Four in a Row, Drop Four, e in Unione Sovietica, Gravitrips) è un gioco in cui i giocatori scelgono un colore e poi si alternano lasciando cadere gettoni colorati in una griglia a sei file, sette colonne verticalmente sospesa. \\
-I pezzi cadono direttamente, occupando lo spazio più basso disponibile all'interno della colonna. L'obiettivo del gioco è quello di essere il primo a formare una linea orizzontale, verticale o diagonale di quattro dei propri gettoni. 
+Abbiamo quindi scelto il ``fratello maggiore'' del Tris: \textbf{Forza 4} (Connect-4). In questo contesto, l'intero stato del gioco è visibile a entrambi i contendenti, eliminando il fattore fortuna e permettendo di concentrare l'analisi esclusivamente sulle capacità computazionali e strategiche dell'Intelligenza Artificiale.
 
 \section{Definizione del problema} 
-Il gioco "Forza 4" (Connect-4) rientra nella categoria dei giochi a somma zero, a informazione perfetta e deterministici. Sebbene le regole siano semplici, la complessità computazionale non è trascurabile.\\\\
+Connect Four (noto anche come Connect 4, Four Up, Plot Four, Find Four, Captain's Mistress, Four in a Row, Drop Four, e in Unione Sovietica, Gravitrips) è un gioco in cui i giocatori scelgono un colore e poi si alternano lasciando cadere gettoni colorati in una griglia a sei file, sette colonne verticalmente sospesa. \\
+I pezzi cadono direttamente, occupando lo spazio più basso disponibile all'interno della colonna. L'obiettivo del gioco è quello di essere il primo a formare una linea orizzontale, verticale o diagonale di quattro dei propri gettoni. \cite{5}
+
+\begin{figure}[H]
+    \centering
+        \includegraphics[width=0.4\textwidth]{images/connect_four.png}
+    \caption{Immagine del gioco Forza 4.}
+\end{figure}
+\noindent
+Il gioco rientra nella categoria dei giochi a somma zero, a informazione perfetta e deterministici. Sebbene le regole siano semplici, la complessità computazionale non è trascurabile.\\\\
 \noindent
 Nonostante il gioco sia stato "risolto" matematicamente (il primo giocatore ha una strategia vincente se gioca perfettamente), per un agente limitato da risorse computazionali e tempo di risposta (real-time interaction), la ricerca esaustiva è impraticabile.
 Il problema richiede quindi l'utilizzo di euristiche o approssimatori di funzione per valutare la bontà di una mossa senza dover esplorare l'intero albero di gioco fino alle foglie.
 
 \subsection{Obiettivi} 
-L'obiettivo principale del progetto è sviluppare e confrontare due diversi approcci per la risoluzione del gioco "Forza 4": uno basato sulla teoria della ricerca nello spazio degli stati e uno basato sull'apprendimento automatico supervisionato. Il sistema non utilizzerà dataset precostruiti, ma genererà autonomamente i dati necesaari per l'addestramento. Nello specifico, gli obiettivi sono:
+L'obiettivo principale del progetto è sviluppare e confrontare due diversi approcci per la risoluzione del gioco Forza 4: uno basato sulla teoria della ricerca nello spazio degli stati e uno basato sull'apprendimento automatico supervisionato. Il sistema non utilizzerà dataset precostruiti, ma genererà autonomamente i dati necesaari per l'addestramento. Nello specifico, gli obiettivi sono:
 \begin{itemize}
     \item \textbf{Generare un Dataset:} Creare un dataset di training personalizzato che superi i limiti delle simulazioni puramente casuali (Random vs Random). Il dataset verrà generato registrando partite miste:
      \begin{itemize}
@@ -139,14 +152,14 @@ La descrizione formale dell'ambiente operativo dell'agente è definita secondo i
     
     \item \textbf{Environment (Ambiente):}
     \begin{itemize}
-        \item Griglia di gioco:Una matrice 6 X 7.
+        \item Griglia di gioco: Una matrice 6 X 7.
         \item Avversario: Un essere umano o un'altra IA.
     \end{itemize}
     
     \item \textbf{Actuators (Attuatori/Azioni):}
     \begin{itemize}
-        \item \textit{Inserimento gettone}: l'attuatore sceglie una delle 7 colonne disponibili.
-        \item \textit{Segnalazione}: comunicazione della mossa o dichiarazione di vittoria/resa.
+        \item Inserimento gettone: l'attuatore sceglie una delle 7 colonne disponibili.
+        \item Segnalazione: comunicazione della mossa o dichiarazione di vittoria/resa.
     \end{itemize}
     
     \item \textbf{Sensors (Sensori/Percezioni):}
@@ -213,7 +226,7 @@ Per la definizione dello schema dei dati, abbiamo preso a riferimento il \textit
 Questa scelta garantisce l'interoperabilità e permette il confronto con standard consolidati nel dominio del Machine Learning applicato ai giochi da tavolo.
 
 \section{Soluzione del problema}
-Il progetto FourSight implementa e confronta due approcci radicalmente diversi per la risoluzione del problema: un approccio simbolico basato sulla ricerca (Pipeline A) e un approccio connessionista basato sull'apprendimento (Pipeline B).
+Il progetto TWAI implementa e confronta due approcci radicalmente diversi per la risoluzione del problema: un approccio simbolico basato sulla ricerca (Pipeline A) e un approccio connessionista basato sull'apprendimento (Pipeline B).
 
 \subsection{Pipeline A: Minimax con Alpha-Beta Pruning}
 Questa pipeline rappresenta l'approccio classico dell'Intelligenza Artificiale simbolica. L'agente non "impara", ma "ragiona" esplorando le conseguenze future delle azioni.
@@ -262,6 +275,71 @@ Il ciclo di apprendimento per ogni epoca segue tre passi fondamentali:
 \end{enumerate}
 \noindent
 Questo processo iterativo consente al modello di apprendere la strategia di gioco codificata nei dati sintetici, riducendo l'errore di classificazione nel tempo.
+
+\section{Valutazione Sperimentale}
+L'obiettivo di questa fase non è solo misurare la "bravura" dell'IA, ma valutare se il sistema è utilizzabile in un contesto reale. Abbiamo analizzato due aspetti chiave: la capacità di generalizzazione (per la Rete Neurale) e la reattività temporale (per il Minimax).
+I test sono stati eseguiti su una macchina locale, simulando le condizioni tipiche di un utente medio.
+
+\subsection{Analisi Rete Neurale (MLP)}
+Per l'approccio basato su Machine Learning, ci siamo chiesti: "La rete sta davvero imparando o sta solo memorizzando?". Per rispondere, abbiamo monitorato due indicatori grafici.
+
+\subsubsection{Curva di Apprendimento (Loss)}
+Il grafico della \textit{Loss Function} rappresenta l'errore commesso dalla rete durante l'addestramento.
+
+\begin{figure}[H]
+    \centering
+        \includegraphics[width=1\linewidth]{images/training_loss_curve.png}
+        \caption{Curva di convergenza della Loss.}
+\end{figure}
+\noindent
+Come si nota dalla curva, l'errore crolla drasticamente nelle prime epoche: questo indica che la rete apprende molto velocemente le regole base (es. "mettere 4 gettoni in fila vince"). \\\\
+\noindent
+Successivamente, la curva si appiattisce (fase di \textit{plateau}), indicando che il modello sta affinando la sua strategia per le situazioni più sottili. Il fatto che la curva non risalga suggerisce l'assenza di \textit{overfitting} (la rete non sta "imparando a memoria").
+
+\subsubsection{Analisi degli Errori (Matrice di Confusione)}
+L'accuratezza globale dell'84\% è un ottimo risultato, ma dove sbaglia l'IA? La matrice di confusione ci aiuta a capirlo.
+
+\begin{figure}[H]
+    \centering
+        \includegraphics[width=0.75\linewidth]{images/confusion_matrix.png}
+        \caption{Matrice di Confusione (Test Set).}
+\end{figure}
+\noindent
+La diagonale principale (i valori corretti) è molto marcata. La rete riconosce quasi perfettamente le vittorie e le sconfitte imminenti.\\\\
+\noindent
+ La maggior parte degli errori si concentra sulla classe "Pareggio/Incerto". Questo è comprensibile: anche per un umano è difficile prevedere un pareggio con 20 mosse di anticipo. La rete tende a essere "ottimista" o "pessimista" in situazioni di stallo, un comportamento tipico degli approcci probabilistici.
+
+\subsection{Benchmark Minimax (Reattività)}
+Per l'algoritmo Minimax, la precisione è garantita dalla matematica. Il vero nemico è il tempo. Abbiamo misurato quanto impiega l'IA a "pensare" a diverse profondità ($d$).
+
+\begin{table}[H]
+\centering
+\caption{Tempi di esecuzione rilevati e Valutazione UX}
+\label{tab:real_benchmark}
+\begin{tabular}{cccc}
+\toprule
+\textbf{Profondità ($d$)} & \textbf{Tempo Medio (s)} & \textbf{Nodi Stimati} & \textbf{Esperienza Utente} \\
+\midrule
+1 & 0.0002 & $\sim 7$ & Istantanea \\
+2 & 0.0006 & $\sim 49$ & Istantanea \\
+3 & 0.0034 & $\sim 340$ & Impercettibile \\
+4 & 0.0174 & $\sim 2,400$ & Molto Fluida \\
+5 & 0.0757 & $\sim 16,800$ & Fluida \\
+6 & \textbf{0.2858} & $\sim 117,000$ & \textbf{Ottima (Real-time)} \\
+\bottomrule
+\end{tabular}
+\end{table}
+\noindent
+Dai dati emerge chiaramente la natura esponenziale del problema. Passando da profondità 5 a 6, il tempo quadruplica (da 0.07s a 0.28s). Questo accade perché per ogni livello aggiuntivo, l'algoritmo deve esplorare circa 7 nuove varianti per ogni mossa precedente.\\\\
+\noindent
+Abbiamo identificato in \textbf{$d=6$} la configurazione ideale. Con un tempo di risposta inferiore a 0.3 secondi, l'IA risulta immediata per l'utente, pur calcolando oltre 100.000 possibili futuri. Spingersi a $d=7$ porterebbe i tempi sopra i 2 secondi, rompendo la fluidità del gioco senza garantire un vantaggio strategico percepibile da un giocatore medio.
+
+\subsection{Trade-off}
+Il confronto finale evidenzia due filosofie opposte:
+\begin{enumerate}
+    \item \textbf{Minimax:} È infallibile entro il suo orizzonte ($d$), ma consuma risorse CPU durante la partita. È ideale quando la precisione tattica è prioritaria.
+    \item \textbf{MLP (Rete Neurale):} Una volta addestrata, ha un tempo di inferenza costante e bassissimo ($O(1)$), indipendentemente dalla complessità della scacchiera. Tuttavia, essendo un approccio probabilistico, può commettere errori "umani" in configurazioni mai viste.
+\end{enumerate}
 
 \printbibliography
 
