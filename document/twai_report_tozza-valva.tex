@@ -89,6 +89,14 @@
 \tableofcontents
 \newpage
 
+\begin{abstract}
+\noindent
+Il presente elaborato documenta lo sviluppo di T.W.A.I. (Tris Was Already Invented), un sistema di Intelligenza Artificiale applicato al gioco Forza 4. L'obiettivo del progetto è confrontare due paradigmi fondamentali dell'IA: l'approccio simbolico, implementato tramite l'algoritmo Minimax con ottimizzazione Alpha-Beta Pruning, e l'approccio connessionista, realizzato mediante una Rete Neurale MLP (Multi-Layer Perceptron).
+Particolare attenzione è stata posta alla generazione autonoma del dataset di training, superando i limiti delle simulazioni casuali. I risultati sperimentali dimostrano come l'approccio neurale, sebbene probabilisticamente imperfetto (86\% di accuratezza), offra tempi di risposta costanti ($O(1)$), rappresentando un'alternativa valida e scalabile rispetto alla complessità esponenziale dell'algoritmo di ricerca.
+\end{abstract}
+
+\newpage
+
 \section{Introduzione}
 Il periodo festivo porta con sé tradizioni imprescindibili: i panettoni, le calze e le discussioni con i parenti che, pur lamentandosi dell'invadenza dell'Intelligenza Artificiale, passano il tempo a guardare video di gattini che ballano sui social. Ma porta anche le immancabili giocate a carte. 
 È stato proprio durante l'ennesima partita persa a \textit{Sette e Mezzo} che è sorta la domanda fatidica: ``E se al nostro posto giocasse un'IA?''.\\\\
@@ -301,13 +309,47 @@ L'accuratezza globale dell'84\% è un ottimo risultato, ma dove sbaglia l'IA? La
 
 \begin{figure}[H]
     \centering
-        \includegraphics[width=0.75\linewidth]{images/confusion_matrix.png}
-        \caption{Matrice di Confusione (Test Set).}
+        \includegraphics[width=1\linewidth]{images/confusion_matrix.png}
+        \caption{Matrice di Confusione (Modello preliminare, dataset ridotto).}
 \end{figure}
 \noindent
 La diagonale principale (i valori corretti) è molto marcata. La rete riconosce quasi perfettamente le vittorie e le sconfitte imminenti.\\\\
 \noindent
  La maggior parte degli errori si concentra sulla classe "Pareggio/Incerto". Questo è comprensibile: anche per un umano è difficile prevedere un pareggio con 20 mosse di anticipo. La rete tende a essere "ottimista" o "pessimista" in situazioni di stallo, un comportamento tipico degli approcci probabilistici.
+
+\subsubsection{Impatto della Dimensione del Dataset}
+Un fattore determinante per le prestazioni del modello MLP è la quantità di dati forniti in ingresso. Le reti neurali sono algoritmi "data-hungry": la loro capacità di generalizzare cresce all'aumentare della varietà degli esempi visti.\\\\
+\noindent
+Abbiamo condotto un'analisi di sensibilità addestrando la stessa architettura di rete su dataset di dimensioni crescenti, mantenendo inalterati gli iperparametri (learning rate, nodi hidden).
+
+\begin{table}[H]
+\centering
+\caption{Relazione tra dimensione del Dataset e Accuratezza}
+\label{tab:dataset_accuracy}
+\begin{tabular}{ccc}
+\toprule
+\textbf{N. Campioni} & \textbf{Accuratezza (Test Set)} & \textbf{Delta Miglioramento} \\
+\midrule
+2000 & 67.12\% & - \\
+10.000 & 71.30\% & +4.18\% \\
+20.000 & 75.33\% & +4.03\% \\
+30.000 & 79.88\% & +4.55\% \\
+50.000 & 82.32\% & +2.44\% \\
+\textbf{100.000} & \textbf{85.95\%} & \textbf{+3.63\%} \\
+\bottomrule
+\end{tabular}
+\end{table}
+\noindent
+\noindent
+Come evidenziato in Tabella \ref{tab:dataset_accuracy}, l'accuratezza scala in modo significativo con la quantità di dati. È interessante notare come il passaggio da 50.000 a 100.000 campioni abbia portato un ulteriore incremento del 3.63\%, portando il modello a sfiorare l'86\% di precisione totale. \\\\
+\noindent
+Questo risultato conferma che per giochi posizionali complessi come Forza 4, la varietà delle situazioni di gioco (specialmente nel "mid-game") è fondamentale. Abbiamo pertanto selezionato il modello addestrato su \textbf{100.000 campioni} come versione definitiva per il deployment nell'applicazione finale.
+
+\begin{figure}[H]
+    \centering
+     \includegraphics[width=1\linewidth]{images/confusion_matrix_100k.png} 
+    \caption{Matrice di Confusione (Modello finale su 100k campioni).}
+\end{figure}
 
 \subsection{Benchmark Minimax (Reattività)}
 Per l'algoritmo Minimax, la precisione è garantita dalla matematica. Il vero nemico è il tempo. Abbiamo misurato quanto impiega l'IA a "pensare" a diverse profondità ($d$).
