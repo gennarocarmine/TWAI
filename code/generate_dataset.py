@@ -107,14 +107,14 @@ def minimax_score(board, depth, alpha, beta, maximizingPlayer):
         return value
 
 
-def generate_high_quality_data(num_samples=2000):
+def generate_high_quality_data(num_samples=100000):
     print(f"Inizio generazione di {num_samples} campioni sintetici.")
     print("Utilizzo di Minimax per l'etichettatura automatica (Labeling)...")
     
     data = []
     
     for i in range(num_samples):
-        if i > 0 and i % 100 == 0: print(f"Generati {i}/{num_samples}...")
+        if i > 0 and i % 10000 == 0: print(f"Generati {i}/{num_samples}...")
             
         board = create_board()
         # Simulazione stato di metà partita (State Sampling)
