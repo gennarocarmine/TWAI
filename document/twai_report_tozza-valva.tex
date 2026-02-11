@@ -351,6 +351,40 @@ Questo risultato conferma che per giochi posizionali complessi come Forza 4, la 
     \caption{Matrice di Confusione (Modello finale su 100k campioni).}
 \end{figure}
 
+\subsubsection{Dettaglio Metriche (Precision, Recall, F1)}
+Il dataset totale di 100.000 campioni è stato partizionato seguendo uno split 80/20 standard: il modello è stato addestrato su 80.000 campioni (Training Set) e successivamente valutato su 20.000 campioni inediti (Test Set). \\\\
+\noindent
+Le metriche riportate di seguito (Precision, Recall, F1) si riferiscono esclusivamente alle performance ottenute su quest'ultimo set, per garantire una stima imparziale delle capacità di generalizzazione dell'agente.
+
+\begin{table}[H]
+\centering
+\caption{Report di Classificazione sul Test Set}
+\label{tab:classification_report}
+\begin{tabular}{lcccc}
+\toprule
+\textbf{Classe} & \textbf{Precision} & \textbf{Recall} & \textbf{F1-Score} & \textbf{Support} \\
+\midrule
+AI Wins (-1)    & 0.78 & 0.74 & 0.76 & 3946 \\
+Draw / Uncertain (0)        & 0.90 & 0.91 & 0.90 & 10110 \\
+Player Wins (1) & 0.82 & 0.85 & 0.83 & 5944 \\
+\midrule
+\textbf{Weighted Avg} & \textbf{0.86} & \textbf{0.86} & \textbf{0.86} & \textbf{20000} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\noindent
+Dai dati in Tabella \ref{tab:classification_report} emergono considerazioni interessanti sulla strategia appresa dalla rete:
+
+\begin{itemize}
+    \item \textbf{Solidità sui Pareggi (Classe 0):} La rete ha un F1-Score molto alto (0.90) su questa classe. Poiché i pareggi o le situazioni di stallo sono la maggioranza nel dataset (circa il 50\% del supporto), il modello è diventato molto abile nel riconoscere quando "non sta succedendo nulla di decisivo".
+    
+    \item \textbf{Prudenza dell'IA (Classe -1):} La \textit{Recall} sulle vittorie dell'IA è la più bassa (0.74). Questo significa che il modello perde l'occasione di identificare alcune delle sue vittorie (Falsi Negativi), probabilmente a causa di una strategia conservativa appresa per minimizzare le sconfitte piuttosto che massimizzare le vittorie rischiose.
+    
+    \item \textbf{Riconoscimento Minaccia (Classe 1):} La rete è più brava a riconoscere quando sta vincendo l'avversario (Recall 0.85) rispetto a quando sta vincendo lei stessa. Questo è un comportamento desiderabile in un gioco difensivo: è meglio sovrastimare il pericolo che ignorarlo.
+\end{itemize}
+\noindent
+
 \subsection{Benchmark Minimax (Reattività)}
 Per l'algoritmo Minimax, la precisione è garantita dalla matematica. Il vero nemico è il tempo. Abbiamo misurato quanto impiega l'IA a "pensare" a diverse profondità ($d$).
 
