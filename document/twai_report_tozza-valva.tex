@@ -91,8 +91,9 @@
 
 \begin{abstract}
 \noindent
-Il presente elaborato documenta lo sviluppo di T.W.A.I. (Tris Was Already Invented), un sistema di Intelligenza Artificiale applicato al gioco Forza 4. L'obiettivo del progetto è confrontare due paradigmi fondamentali dell'IA: l'approccio simbolico, implementato tramite l'algoritmo Minimax con ottimizzazione Alpha-Beta Pruning, e l'approccio connessionista, realizzato mediante una Rete Neurale MLP (Multi-Layer Perceptron).
-Particolare attenzione è stata posta alla generazione autonoma del dataset di training, superando i limiti delle simulazioni casuali. I risultati sperimentali dimostrano come l'approccio neurale, sebbene probabilisticamente imperfetto (86\% di accuratezza), offra tempi di risposta costanti ($O(1)$), rappresentando un'alternativa valida e scalabile rispetto alla complessità esponenziale dell'algoritmo di ricerca.
+Il presente elaborato documenta lo sviluppo di T.W.A.I. (Tris Was Already Invented), un sistema di Intelligenza Artificiale applicato al gioco Forza 4. L'obiettivo del progetto è confrontare due paradigmi fondamentali dell'IA: l'approccio simbolico, implementato tramite l'algoritmo Minimax con ottimizzazioni Alpha-Beta Pruning e Move Ordering, e l'approccio connessionista, realizzato mediante una Rete Neurale MLP (Multi-Layer Perceptron).
+Particolare rilievo assume la fase di \textit{Data Engineering}, in cui l'agente simbolico è stato impiegato come Oracolo per la generazione e l'etichettatura automatica di un dataset sintetico di oltre 100.000 configurazioni.
+I risultati sperimentali evidenziano il trade-off tra i due modelli: mentre l'approccio neurale offre un tempo di inferenza costante ($O(1)$) con un'accuratezza dell'86\%, l'algoritmo di ricerca garantisce la correttezza formale e, grazie alle ottimizzazioni introdotte, raggiunge prestazioni \textit{real-time} (0.13s) a profondità competitive, pur rimanendo vincolato alla complessità esponenziale dello spazio degli stati.
 \end{abstract}
 
 \newpage
@@ -188,6 +189,28 @@ L'ambiente di gioco Forza 4 presenta le seguenti proprietà:
 \subsection{Analisi del problema} 
 Lo spazio degli stati teorico è costituito da tutte le possibili configurazioni di una griglia $6 \times 7$ con tre possibili valori per cella (Vuoto, Giocatore 1, Giocatore 2), portando a un limite superiore di $3^{42}$ stati. Tuttavia, considerando i vincoli di gravità (le pedine devono poggiare su altre pedine o sul fondo), il numero reale di stati legali è stimato intorno a $4.5 \times 10^{12}$.
 
+\section{Tecnologie e Strumenti Utilizzati}
+Lo sviluppo di T.W.A.I. è stato realizzato interamente in linguaggio Python. La scelta di questo linguaggio è stata dettata dalla vastità del suo ecosistema per il calcolo scientifico e l'intelligenza artificiale.
+Di seguito vengono descritte le librerie principali che compongono l'architettura del sistema:
+
+\begin{itemize}
+    \item \textbf{numpy:} Utilizzata per la rappresentazione in memoria della griglia di gioco. La scacchiera $6 \times 7$ è gestita come un array bidimensionale (\texttt{ndarray}) di interi. L'efficienza di NumPy nelle operazioni vettoriali e nella manipolazione di matrici è fondamentale per velocizzare le funzioni di valutazione e controllo della vittoria.
+    \item \textbf{pandas:} Impiegata nel modulo di Data Engineering per la gestione strutturata del dataset. 
+\end{itemize}
+
+\begin{itemize}
+    \item \textbf{scikit-learn:} La libreria di riferimento per l'implementazione della pipeline di apprendimento. Nello specifico, sono stati utilizzati:
+    \begin{itemize}
+        \item \texttt{MLPClassifier}: Per la creazione e l'addestramento della rete neurale Multi-Layer Perceptron.
+        \item \texttt{train\_test\_split}: Per la partizione corretta del dataset in Training Set e Test Set.
+        \item \texttt{metrics}: Per il calcolo di accuratezza, matrici di confusione e report di classificazione.
+    \end{itemize}
+    \item \textbf{matplotlib e seaborn:} Utilizzate nella fase di analisi per generare grafici e visualizzazioni (curve di loss, heatmap della matrice di confusione) utili a monitorare le performance dell'agente.
+\end{itemize}
+\noindent
+Per garantire un'interazione fluida e accessibile con gli agenti intelligenti, è stata sviluppata un'interfaccia web utilizzando \textbf{Streamlit}, un framework open-source orientato al Data Science.\\\\
+\noindent
+La scelta di Streamlit ha permesso di trasformare gli script di backend (logica di gioco e modelli AI) in un'applicazione web interattiva in tempi ridotti, senza la necessità di gestire complessi stack front-end (HTML/CSS/JS).
 
 \section{Dataset e Data Engineering}
 Per soddisfare il requisito di progetto relativo alla gestione attiva dei dati, abbiamo evitato l'utilizzo di dataset pre-confezionati. Abbiamo invece sviluppato una procedura di generazione di dati sintetici, necessaria per applicare tecniche di apprendimento supervisionato in un contesto di gioco.
@@ -249,6 +272,16 @@ L'algoritmo Minimax è una procedura ricorsiva per la scelta della mossa ottimal
 Il valore di un nodo è determinato ricorsivamente dai valori dei suoi figli. Per ottimizzare la ricerca, abbiamo implementato la potatura \textbf{Alpha-Beta Pruning}.\\\\
 \noindent
 Questa tecnica mantiene due parametri, $\alpha$ (miglior valore per MAX) e $\beta$ (miglior valore per MIN). Se durante l'esplorazione si trova una mossa che peggiora la situazione rispetto a quanto già garantito dai rami precedenti, l'intero ramo viene tagliato (pruned). Ciò riduce la complessità temporale nel caso medio da $O(b^d)$ a $O(b^{d/2})$, permettendo esplorazioni più profonde a parità di tempo.
+
+\subsubsection{Ottimizzazione: Ordinamento delle Mosse (Move Ordering)}
+L'efficacia della potatura Alpha-Beta dipende fortemente dall'ordine in cui le mosse vengono valutate. Nel caso peggiore (in cui le mosse migliori vengono esaminate per ultime), l'algoritmo degenera in un Minimax puro, rendendo inutile l'ottimizzazione.\\\\
+\noindent
+Per mitigare questo rischio, abbiamo implementato un'euristica di ordinamento statico specifica per il dominio di Forza 4.
+Poiché le colonne centrali della griglia offrono un numero maggiore di potenziali allineamenti (orizzontali, verticali e diagonali) rispetto a quelle laterali, è statisticamente più probabile che la mossa ottimale si trovi al centro.\\\\
+\noindent
+Invece di iterare le colonne in ordine sequenziale (da 0 a 6), l'algoritmo esplora lo spazio delle azioni partendo dal centro verso l'esterno, seguendo l'ordine di priorità:
+\[ [3, 2, 4, 1, 5, 0, 6] \]
+Questa semplice accortezza permette all'algoritmo di trovare rapidamente un valore di $\alpha$ elevato (una mossa forte), massimizzando il numero di rami tagliati (pruning) e riducendo significativamente il tempo di calcolo effettivo.
 
 \subsection{Pipeline B: Apprendimento Automatico (MLP)}
 La seconda soluzione applica i concetti di apprendimento supervisionato discussi nel corso, utilizzando una rete neurale per approssimare la funzione di valutazione.
@@ -386,29 +419,54 @@ Dai dati in Tabella \ref{tab:classification_report} emergono considerazioni inte
 \noindent
 
 \subsection{Benchmark Minimax (Reattività)}
-Per l'algoritmo Minimax, la precisione è garantita dalla matematica. Il vero nemico è il tempo. Abbiamo misurato quanto impiega l'IA a "pensare" a diverse profondità ($d$).
+Per l'algoritmo Minimax, la precisione è garantita dalla matematica. Il vero nemico è il tempo di esecuzione, che cresce esponenzialmente con la profondità di ricerca.
+In una prima fase, abbiamo misurato le prestazioni dell'algoritmo applicando la sola potatura Alpha-Beta con un ordine di visita delle colonne standard (sequenziale da 0 a 6).
 
 \begin{table}[H]
 \centering
-\caption{Tempi di esecuzione rilevati e Valutazione UX}
-\label{tab:real_benchmark}
+\caption{Tempi di esecuzione rilevati per Minimax con Alpha-Beta Pruning (Standard)}
+\label{tab:real_benchmark_standard}
 \begin{tabular}{cccc}
 \toprule
-\textbf{Profondità ($d$)} & \textbf{Tempo Medio (s)} & \textbf{Nodi Stimati} & \textbf{Esperienza Utente} \\
+\textbf{Profondità ($d$)} & \textbf{Tempo Medio (s)} & \textbf{Nodi Stimati} \\
 \midrule
-1 & 0.0002 & $\sim 7$ & Istantanea \\
-2 & 0.0006 & $\sim 49$ & Istantanea \\
-3 & 0.0034 & $\sim 340$ & Impercettibile \\
-4 & 0.0174 & $\sim 2,400$ & Molto Fluida \\
-5 & 0.0757 & $\sim 16,800$ & Fluida \\
-6 & \textbf{0.2858} & $\sim 117,000$ & \textbf{Ottima (Real-time)} \\
+1 & 0.0002 & $\sim 7$ \\
+2 & 0.0006 & $\sim 49$ \\
+3 & 0.0034 & $\sim 340$ \\
+4 & 0.0174 & $\sim 2,400$  \\
+5 & 0.0757 & $\sim 16,800$ \\
+6 & \textbf{0.2858} & $\sim 117,000$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\noindent
+Dai dati in Tabella \ref{tab:real_benchmark_standard} emerge chiaramente la natura esponenziale del problema: passando da profondità 5 a 6, il tempo quadruplica (da 0.07s a 0.28s). Sebbene 0.28s sia un tempo accettabile, lascia poco margine per ulteriori approfondimenti.\\\\
+\noindent
+Per mitigare questo effetto, abbiamo introdotto l'ottimizzazione di Ordinamento delle Mosse, forzando l'algoritmo a valutare prima le colonne centrali (più promettenti). Questo aumenta la probabilità di effettuare "tagli" (pruning) anticipati nell'albero di ricerca. I risultati migliorati sono riportati di seguito:
+
+\begin{table}[H]
+\centering
+\caption{Tempi di esecuzione rilevati per Minimax con Alpha-Beta Pruning + Ordinamento delle Mosse}
+\label{tab:real_benchmark_ordered}
+\begin{tabular}{cccc}
+\toprule
+\textbf{Profondità ($d$)} & \textbf{Tempo Medio (s)} & \textbf{Nodi Stimati} \\
+\midrule
+1 & 0.0005 & $\sim 7$ \\
+2 & 0.0009 & $\sim 49$ \\
+3 & 0.0051 & $\sim 340$ \\
+4 & 0.0111 & $\sim 2,400$  \\
+5 & 0.0310 & $\sim 16,800$ \\
+6 & \textbf{0.1328} & $\sim 117,000$ \\
 \bottomrule
 \end{tabular}
 \end{table}
 \noindent
-Dai dati emerge chiaramente la natura esponenziale del problema. Passando da profondità 5 a 6, il tempo quadruplica (da 0.07s a 0.28s). Questo accade perché per ogni livello aggiuntivo, l'algoritmo deve esplorare circa 7 nuove varianti per ogni mossa precedente.\\\\
+\subsubsection*{Analisi del miglioramento}
+Il confronto tra le due configurazioni evidenzia l'efficacia dell'ottimizzazione. A profondità $d=6$, il tempo di calcolo scende da \textbf{0.2858s} a \textbf{0.1328s}.\\\\
 \noindent
-Abbiamo identificato in \textbf{$d=6$} la configurazione ideale. Con un tempo di risposta inferiore a 0.3 secondi, l'IA risulta immediata per l'utente, pur calcolando oltre 100.000 possibili futuri. Spingersi a $d=7$ porterebbe i tempi sopra i 2 secondi, rompendo la fluidità del gioco senza garantire un vantaggio strategico percepibile da un giocatore medio.
+Grazie a questo incremento di efficienza, abbiamo identificato in \textbf{$d=6$} la configurazione ideale per il sistema finale. Con un tempo di risposta ora ben al di sotto della soglia di percezione (0.13s), l'IA offre un'esperienza di gioco fluida e immediata ("Real-time"), pur mantenendo una profondità di analisi strategica elevata. Spingersi a $d=7$ rimane sconsigliato, in quanto porterebbe i tempi oltre il secondo, degradando la User Experience senza offrire un vantaggio tattico proporzionale contro un giocatore medio.
 
 \subsection{Trade-off}
 Il confronto finale evidenzia due filosofie opposte:
