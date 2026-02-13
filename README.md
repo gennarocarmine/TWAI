@@ -6,7 +6,7 @@ This project was developed for the **Foundations of Artificial Intelligence** co
 
 ---
 
-## 🚀 Installation
+## Installation
 
 Follow these steps to run the application on your local machine.
 
@@ -17,8 +17,8 @@ Ensure you have [Python](https://www.python.org/) installed (version 3.8 or high
 ### 1. Clone the repository
 
 ```bash
-git clone [https://github.com/gennarocarmine/fia-project.git](https://github.com/gennarocarmine/fia-project.git)
-cd fia-project
+git clone [https://github.com/gennarocarmine/TWAI.git](https://github.com/gennarocarmine/TWAI.git)
+cd TWAI
 ```
 
 ### 2. Create a Virtual Environment (Recommended)
@@ -53,27 +53,9 @@ Or for Linux/Mac users:
 pip3 install -r requirements.txt
 ```
 
-### 4. Generate the Dataset ⚠️ (Crucial Step)
+## How to Run
 
-Before running the application, you must generate the training data. The Neural Network needs a dataset to learn from. Run the generation script which creates connect4_dataset_hq.csv via self-play simulations.
-
-```bash
-python generate_dataset.py
-```
-
-Or
-
-```bash
-python3 generate_dataset.py
-```
-
-> Note: This process might take a few moments as it simulates thousands of games to ensure high-quality data.
-
----
-
-### 🎮 How to Run
-
-Once the dataset is ready, you can launch the game interface. Ensure you are where `app.py` is located and run:
+The project comes with a pre-generated dataset `(connect4_dataset_hq.csv)`, so you can launch the game immediately. Ensure you are where `app.py` is located (code folder) and run:
 
 ```bash
 streamlit run app.py
@@ -93,6 +75,37 @@ A browser tab will automatically open (usually at http://localhost:8501).
     Play: Click the arrows above the grid to drop your pieces.
 
     Reset: Use the sidebar button to start a new match.
+
+## Reproducing the Experiments
+
+If you want to validate the thesis results or regenerate the assets, you can use the included analysis scripts.
+
+### 1. Dataset Generation (Optional)
+
+The repository already includes connect4_dataset_hq.csv (100k samples). If you wish to regenerate it from scratch using the Minimax Oracle:
+
+```bash
+python generate_dataset.py
+# Or: python3 generate_dataset.py
+```
+
+> Note: This process might take a few moments as it simulates thousands of games to ensure high-quality data.
+
+### 2. Neural Network Analysis
+
+To retrain the MLP model and generate the Loss Curve and Confusion Matrix they will be saved in an `code/images/` folder:
+
+```bash
+python analysis_mlp.py
+# Or: python3 analysis_mlp.py
+```
+
+### 3. Minimax Benchmark
+
+```bash
+python benchmark_minimax.py
+# Or: python3 benchmark_minimax.py
+```
 
 ## Team
 
