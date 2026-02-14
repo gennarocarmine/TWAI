@@ -261,23 +261,24 @@ Questa scelta garantisce l'interoperabilità e permette il confronto con standar
 Il progetto TWAI implementa e confronta due approcci radicalmente diversi per la risoluzione del problema: un approccio simbolico basato sulla ricerca (Pipeline A) e un approccio connessionista basato sull'apprendimento (Pipeline B).
 
 \subsection{Pipeline A: Minimax con Alpha-Beta Pruning}
-Questa pipeline rappresenta l'approccio classico dell'Intelligenza Artificiale simbolica. L'agente non "impara", ma "ragiona" esplorando le conseguenze future delle azioni.
+Questa pipeline rappresenta l'approccio classico dell'Intelligenza Artificiale simbolica. A differenza delle reti neurali, l'agente non apprende dai dati, ma \textbf{esplora lo spazio degli stati}, simulando le conseguenze future di ogni azione possibile per determinare la strategia ottimale.
 
 \subsubsection{Cenni Teorici}
-L'algoritmo Minimax è una procedura ricorsiva per la scelta della mossa ottimale in giochi avversari. Dato uno stato $S$:
+L'algoritmo Minimax è un metodo ricorsivo decisionale utilizzato nella teoria dei giochi a somm zero con informazione perfetta. Dato uno stato $S$:
 \begin{itemize}
-    \item \textbf{MAX (Agente):} Cerca di massimizzare il valore della funzione di utilità.
-    \item \textbf{MIN (Avversario):} Cerca di minimizzare il valore della funzione di utilità.
+    \item \textbf{MAX (Agente):} Cerca di massimizzare il valore della funzione di utilità finale.
+    \item \textbf{MIN (Avversario):} Tenta di minimizzare lo stesso valore (ovvero, massimizzare il proprio vantaggio).
 \end{itemize}
 \noindent
-Il valore di un nodo è determinato ricorsivamente dai valori dei suoi figli. Per ottimizzare la ricerca, abbiamo implementato la potatura \textbf{Alpha-Beta Pruning}.\\\\
+Il valore di un nodo (stato di gioco) è calcolato retropagando i valori dai nodi foglia fino alla radice. Tuttavia, la complessità temporale di base O($b^d$) l'algoritmo impraticabile per profondità elevate. Per ottimizzare la ricerca, abbiamo implementato la potatura \textbf{Alpha-Beta Pruning}.\\\\
 \noindent
-Questa tecnica mantiene due parametri, $\alpha$ (miglior valore per MAX) e $\beta$ (miglior valore per MIN). Se durante l'esplorazione si trova una mossa che peggiora la situazione rispetto a quanto già garantito dai rami precedenti, l'intero ramo viene tagliato (pruned). Ciò riduce la complessità temporale nel caso medio da $O(b^d)$ a $O(b^{d/2})$, permettendo esplorazioni più profonde a parità di tempo.
+Questa tecnica mantiene due parametri, $\alpha$ (miglior valore per MAX) e $\beta$ (miglior valore per MIN). Se durante l'esplorazione si trova una mossa che peggiora la situazione rispetto a quanto già garantito dai rami precedenti, l'intero sotto-albero viene tagliato (pruned). Ciò riduce la complessità temporale nel caso medio da $O(b^d)$ a $O(b^{d/2})$, permettendo all'agente di esplorare una profondità doppia rispetto al Minimax puronello stesso intervallo di tempo.
 
 \subsubsection{Ottimizzazione: Ordinamento delle Mosse (Move Ordering)}
-L'efficacia della potatura Alpha-Beta dipende fortemente dall'ordine in cui le mosse vengono valutate. Nel caso peggiore (in cui le mosse migliori vengono esaminate per ultime), l'algoritmo degenera in un Minimax puro, rendendo inutile l'ottimizzazione.\\\\
+L'efficacia della potatura Alpha-Beta dipende fortemente dall'ordine in cui le mosse vengono valutate. Nel caso peggiore, ovvero in cui le mosse migliori venissero esaminate per ultime, non avrebbe alcun taglio el'algoritmo degenererebbe in un Minimax puro, rendendo inutile l'ottimizzazione.\\\\
+Nel \textbf{caso migliore}, se le mosse forti vengono valutate per prime, i valori di $\alpha$ e $\beta$ convergono rapidamente, massimizzando i tagli.\\\\
 \noindent
-Per mitigare questo rischio, abbiamo implementato un'euristica di ordinamento statico specifica per il dominio di Forza 4.
+Per avvicinarci a questo caso ideale, abbiamo implementato un'euristica di ordinamento statico specifica per il dominio di Forza 4.
 Poiché le colonne centrali della griglia offrono un numero maggiore di potenziali allineamenti (orizzontali, verticali e diagonali) rispetto a quelle laterali, è statisticamente più probabile che la mossa ottimale si trovi al centro.\\\\
 \noindent
 Invece di iterare le colonne in ordine sequenziale (da 0 a 6), l'algoritmo esplora lo spazio delle azioni partendo dal centro verso l'esterno, seguendo l'ordine di priorità:
@@ -285,7 +286,7 @@ Invece di iterare le colonne in ordine sequenziale (da 0 a 6), l'algoritmo esplo
 Questa semplice accortezza permette all'algoritmo di trovare rapidamente un valore di $\alpha$ elevato (una mossa forte), massimizzando il numero di rami tagliati (pruning) e riducendo significativamente il tempo di calcolo effettivo.
 
 \subsection{Pipeline B: Apprendimento Automatico (MLP)}
-La seconda soluzione applica i concetti di apprendimento supervisionato discussi nel corso, utilizzando una rete neurale per approssimare la funzione di valutazione.
+La seconda soluzione applica i concetti di apprendimento supervisionato discussi nel corso, utilizzando una rete neurale per approssimare la funzione di valutazione ideale.
 
 \subsubsection{Architettura della Rete Neurale}
 Abbiamo progettato un Multi-Layer Perceptron (MLP), una rete neurale feed-forward costituita da strati densi completamente connessi.
@@ -296,9 +297,9 @@ Poiché la valutazione di una scacchiera di Forza 4 presenta confini decisionali
 La topologia implementata sfrutta la capacità dell'MLP di agire come approssimatore universale di funzioni ed è così composta:
 
 \begin{enumerate}
-    \item \textbf{Input Layer (42 Neuroni):} Riceve il vettore linearizzato della scacchiera.
+    \item \textbf{Input Layer (42 Neuroni):} Riceve il vettore linearizzato della scacchiera (6 x 7), normalizzando lo stato di gioco.
     \item \textbf{Hidden Layers (64 e 32 Neuroni):} Due strati densi incaricati di estrarre feature latenti dalle posizioni delle pedine.
-    \item \textbf{Activation Function (ReLU):} Utilizziamo la \textit{Rectified Linear Unit} ($f(x) = \max(0, x)$) per gli strati nascosti. Questa funzione è preferita alla sigmoide per le reti profonde in quanto mitiga il problema del \textit{vanishing gradient} e favorisce una convergenza più rapida.
+    \item \textbf{Activation Function (ReLU):} Utilizziamo la \textit{Rectified Linear Unit} ($f(x) = \max(0, x)$) per gli strati nascosti. Questa funzione è preferita alla sigmoide per le reti profonde in quanto mitiga il problema del \textit{vanishing gradient} e, grazie alla sua semplicità computazionale, favorisce una convergenza più rapida durante l'addestramento.
     \item \textbf{Output Layer (Classificazione):} Restituisce la predizione sulla classe vincente.
 \end{enumerate}
 
