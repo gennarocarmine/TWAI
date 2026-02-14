@@ -9,7 +9,7 @@ def run_benchmark():
     gl.drop_piece(board, 0, 3, gl.PLAYER_PIECE) # Player gioca al centro
     gl.drop_piece(board, 1, 3, gl.AI_PIECE)     # AI risponde sopra
     
-    depths = [1, 2, 3, 4, 5, 6] # Fermati a 6, il 7 potrebbe impiegare minuti
+    depths = [1, 2, 3, 4, 5, 6, 7] # 7 ora è fattibile con le ottimizzazioni
     results = []
 
     print(f"{'Depth':<10} | {'Time (sec)':<15} | {'Nodi stimati'}")
